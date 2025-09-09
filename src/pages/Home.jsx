@@ -1,110 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCommunities,
-  searchCommunities,
 } from "../services/community-service";
-import { getItemsByCommunity } from "../services/item-service";
-
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CommunityCard from "../components/CommunityCard";
-import { useUser } from "../contexts/UserContext";
-import {
-  createMember,
-  getMembersByCommunityAndUser,
-} from "../services/member-service";
-import ConfirmModal from "../components/ConfirmModal";
+import { useHomeCommunities, useHomeItems } from "../queries/use-home-data.js";
+import { useUser } from "../contexts/UserContext.jsx";
+import { toast } from "react-toastify";
 
 const Home = () => {
-  const user = useUser();
   const navigate = useNavigate();
-
-  const [homeData, setHomeData] = useState({
-    communities: [],
-    items: [],
-  });
-  const [loading, setLoading] = useState(true);
-
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
-  const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  const [selectedCommunityForJoin, setSelectedCommunityForJoin] =
-    useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchText, setSearchText] = useState("");
 
-  async function getHomeData() {
-    try {
-      // Buscar comunidades que o usuário é membro
-      const communities = await getCommunities();
+  /** Pega apenas as 5 comunidades com mais membros
+   *  Usa o hook useHomeCommunities que faz o fetch usando react-query
+   *  e retorna data(Comunidades) e isLoading
+   *  Usa o hook useHomeItems que faz o fetch usando react-query
+   *  e retorna data(Itens) e isLoading
+   */
+  const { data, isLoading: isLoadingCommunities } = useHomeCommunities();
+  const { data: homeItems, isLoading: isLoadingItems } = useHomeItems();
 
-      // Se o usuário tem comunidades, buscar itens de cada uma
-      let allItems = [];
-      if (communities && communities.length > 0) {
-        // Buscar itens de todas as comunidades do usuário
-        const itemsPromises = await communities.map((community) =>
-          getItemsByCommunity(community.id)
-        );
-
-        const itemsArrays = await Promise.all(itemsPromises);
-
-        // Combinar todos os arrays de itens em um único array
-        allItems = itemsArrays.flat() || [];
-
-        // Ordenar por data de criação (mais recentes primeiro) e pegar apenas 6
-        allItems = allItems
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 6);
-      }
-
-      return {
-        communities,
-        items: allItems,
-      };
-    } catch (error) {
-      console.error("Error fetching home data", error);
-      throw error;
-    }
-  }
-
-  // Busca em tempo real (opcional)
-  useEffect(() => {
-    if (searchTerm.trim() && homeData.communities.length > 0) {
-      const filteredCommunities = homeData.communities.filter(
-        (community) =>
-          community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          community.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-      // Atualiza resultados locais em tempo real
-      if (showSearchResults) {
-        setSearchResults(filteredCommunities);
-      }
-    }
-  }, [searchTerm, homeData.communities, showSearchResults]);
-
-  // Carregar dados do backend
-  useEffect(() => {
-    async function loadHomeData() {
-      try {
-        setLoading(true);
-        const data = await getHomeData();
-        setHomeData(data);
-      } catch (error) {
-        console.error("Erro ao carregar dados da home:", error);
-        setHomeData({
-          communities: [],
-          items: [],
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadHomeData();
-  }, []);
+  const homeCommunities = data?.communities;
 
   // Handlers
   const handleQueroTrocar = () => {
@@ -122,47 +46,23 @@ const Home = () => {
     navigate("/como-funciona");
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-
-    if (!searchTerm.trim()) {
-      alert("Digite um nome da comunidade para buscar");
+  const handleSearch = async () => {
+    if (searchTerm.trim() === "") {
+      toast.info("Por favor, insira um termo de busca.");
       return;
     }
-
+    setIsSearching(true);
+    setSearchText(searchTerm);
     try {
-      setIsSearching(true);
+      const result = await getCommunities({ search: searchTerm });
+      console.log("Resultado da busca: ", result);
+      setSearchResults(result.communities);
 
-      const results = await searchCommunities(searchTerm.trim());
-
-      let filteredResults = results;
-      if (results.length === 0 && homeData.communities.length > 0) {
-        filteredResults = homeData.communities.filter(
-          (community) =>
-            community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            community.description
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())
-        );
-      }
-
-      setSearchResults(filteredResults);
       setShowSearchResults(true);
     } catch (error) {
-      console.error("Erro na busca:", error);
-
-      const localResults = homeData.communities.filter(
-        (community) =>
-          community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          community.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-      setSearchResults(localResults);
-      setShowSearchResults(true);
-
-      if (localResults.length === 0) {
-        alert("Erro ao buscar comunidades. Tente novamente.");
-      }
+      console.error("Erro ao buscar comunidades:", error);
+      toast.error("Erro ao buscar comunidades. Tente novamente.");
+      setIsSearching(false);
     } finally {
       setIsSearching(false);
     }
@@ -170,57 +70,11 @@ const Home = () => {
 
   const clearSearch = () => {
     setSearchTerm("");
-    setSearchResults([]);
-    setShowSearchResults(false);
   };
 
-  const handleCommunityClick = async (communityId) => {
-    setSelectedCommunityId(communityId);
-    const userId = user.user.id;
-    const membership = await getMembersByCommunityAndUser(communityId, userId);
-    console.log("Membership:", membership);
-    const isMember = membership !== null;
-
-    if (isMember) {
-      navigate(`/community/${communityId}`);
-    } else {
-      // Mostrar modal para perguntar se o usuário quer entrar na comunidade
-      const community = homeData.communities.find((c) => c.id === communityId);
-      setSelectedCommunityForJoin(community);
-      setShowJoinModal(true);
-    }
-
-    setSearchTerm("");
-    setSearchResults([]);
-    setShowSearchResults(false);
-  };
-
-  const handleCloseModal = () => {
-    setShowJoinModal(false);
-    setSelectedCommunityForJoin(null);
-  };
-
-  const handleJoinCommunity = async () => {
-    try {
-      await createMember({
-        userId: user.user.id,
-        communityId: selectedCommunityForJoin.id,
-        isAdmin: false,
-      });
-      setShowJoinModal(false);
-      navigate(`/community/${selectedCommunityForJoin.id}`);
-    } catch (error) {
-      console.error("Erro ao entrar na comunidade:", error);
-      setShowJoinModal(false);
-    }
-  };
-
-  // Preparar dados para exibição
+  // // Preparar dados para exibição
   const displayCommunities = showSearchResults
-    ? searchResults
-    : homeData.communities.length > 0
-      ? homeData.communities.slice(0, 3)
-      : [];
+   ? searchResults : homeCommunities
 
   const convertItemsToImages = (itemsArray) => {
     return itemsArray.map((item) => ({
@@ -230,19 +84,23 @@ const Home = () => {
   };
 
   const itemImages =
-    homeData.items?.length > 0 ? convertItemsToImages(homeData.items) : [];
+    homeItems?.length > 0 ? convertItemsToImages(homeItems) : [];
   const galeryImagesOne =
     itemImages.slice(0, 3)?.length >= 3 ? itemImages.slice(0, 3) : [];
   const galeryImagesTwo =
     itemImages.slice(3, 6)?.length >= 3 ? itemImages.slice(3, 6) : [];
 
-  if (loading) {
+  if (isLoadingItems || isLoadingCommunities) {
+    // Exibe um carregamento simples enquanto os dados estão sendo buscados
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-blue-500"></div>
       </div>
     );
   }
+
+  console.log("Home Communities:", homeCommunities);
+  console.log("Home Items:", homeItems);
 
   return (
     <div className="w-full">
@@ -302,16 +160,13 @@ const Home = () => {
           </div>
 
           <div className="flex items-center">
-            <form
-              onSubmit={handleSearch}
-              className="flex w-full items-center gap-5"
-            >
+            <form className="flex w-full items-center gap-5">
               <div className="relative w-full">
                 <input
                   type="text"
-                  placeholder="Digite o nome da comunidade"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Digite o nome da comunidade"
                   className="h-[68px] w-full rounded-2xl border border-[#1b5fff] bg-[#F7F2FA] px-10 py-5 text-lg text-[#938F96] outline-none"
                 />
                 {searchTerm && (
@@ -325,7 +180,8 @@ const Home = () => {
                 )}
               </div>
               <button
-                type="submit"
+                type="button"
+                onClick={handleSearch}
                 disabled={isSearching}
                 className="flex h-[68px] w-[68px] cursor-pointer items-center justify-center rounded-2xl bg-blue-600 text-white transition-colors duration-700 hover:bg-[var(--color-tertiary)] disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -341,7 +197,7 @@ const Home = () => {
         <section className="">
           <h2 className="text-5xl font-medium text-[#111827]">
             {showSearchResults
-              ? `Resultados da busca${searchTerm ? ` para "${searchTerm}"` : ""}`
+              ? `Resultados da busca${searchTerm ? ` para "${searchText}"` : ""}`
               : "Comunidades mais acessadas"}
           </h2>
           <div className="flex items-center justify-between">
@@ -369,7 +225,7 @@ const Home = () => {
             )}
           </div>
           <div className="mt-8 grid w-full max-w-[1200px] grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {displayCommunities.length === 0 && showSearchResults ? (
+            {homeCommunities.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-12">
                 <div className="mb-4 text-6xl">🔍</div>
                 <h3 className="mb-2 text-2xl font-medium text-gray-700">
@@ -388,20 +244,9 @@ const Home = () => {
                 </p>
               </div>
             ) : (
-              homeData.communities.map((community) => {
-                const isSelected = selectedCommunityId === community.id;
+              displayCommunities.map((community) => {
                 return (
-                  <CommunityCard
-                    community={community}
-                    key={community.id}
-                    imageUrl={community.imageUrl}
-                    categoryLabel="comunidade"
-                    title={community.name || community.title}
-                    description={community.description}
-                    membersCount={community.membersCount || 0}
-                    isSelected={isSelected}
-                    onClick={() => handleCommunityClick(community.id)}
-                  />
+                  <CommunityCard community={community} key={community.id} />
                 );
               })
             )}
@@ -509,12 +354,6 @@ const Home = () => {
         />
       </section>
       <Footer />
-      <ConfirmModal
-        isOpen={showJoinModal}
-        message={`Você deseja entrar na comunidade "${selectedCommunityForJoin?.name}"?`}
-        onClose={handleCloseModal}
-        onConfirm={handleJoinCommunity}
-      />
     </div>
   );
 };

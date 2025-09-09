@@ -7,7 +7,7 @@ import {
 } from "../services/community-service";
 import { validateCreateCommunity } from "../validators/community-validation";
 
-const CreateListingModal = ({ isOpen, onClose, onCommunityCreated }) => {
+const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
   const [communityData, setCommunityData] = useState({
     name: "",
     description: "",
@@ -240,4 +240,4 @@ const CreateListingModal = ({ isOpen, onClose, onCommunityCreated }) => {
   );
 };
 
-export default CreateListingModal;
+export default CreateCommunityModal;

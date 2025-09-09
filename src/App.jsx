@@ -11,69 +11,75 @@ import Home from "./pages/Home";
 import Community from "./pages/Community";
 import Communities from "./pages/Communities";
 import HowItWorks from "./pages/HowItWorks";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+const queryClient = new QueryClient()
 
 function App() {
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        pauseOnHover
-        theme={undefined}
-      />
-
-      <Routes>
-        {/* Rotas públicas */}
-        <Route path="/" element={<Login />} />
-        <Route path="/cadastro" element={<Register />} />
-      </Routes>
-
-      <UserProvider>
+      <QueryClientProvider client={queryClient}>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          pauseOnHover
+          theme={undefined}
+        />
         <Routes>
-          {/* Rotas privadas */}
-          <Route
-            path="/home"
-            element={
-              <PrivateRoutes>
-                <Home />
-              </PrivateRoutes>
-            }
-          />
-          <Route
-            path="/community/:communityId"
-            element={
-              <PrivateRoutes>
-                <Community />
-              </PrivateRoutes>
-            }
-          />
-          <Route
-            path="/comunidades"
-            element={
-              <PrivateRoutes>
-                <Communities />
-              </PrivateRoutes>
-            }
-          />
-          <Route
-            path="/como-funciona"
-            element={
-              <PrivateRoutes>
-                <HowItWorks />
-              </PrivateRoutes>
-            }
-          />
-          <Route
-            path="/perfil"
-            element={
-              <PrivateRoutes>
-                <UserProfile />
-              </PrivateRoutes>
-            }
-          />
+          {/* Rotas públicas */}
+          <Route path="/" element={<Login />} />
+          <Route path="/cadastro" element={<Register />} />
         </Routes>
-      </UserProvider>
+
+        <UserProvider>
+          <Routes>
+            {/* Rotas privadas */}
+            <Route
+              path="/home"
+              element={
+                <PrivateRoutes>
+                  <Home />
+                </PrivateRoutes>
+              }
+            />
+            <Route
+              path="/comunidades/:communityId"
+              element={
+                <PrivateRoutes>
+                  <Community />
+                </PrivateRoutes>
+              }
+            />
+            <Route
+              path="/comunidades"
+              element={
+                <PrivateRoutes>
+                  <Communities />
+                </PrivateRoutes>
+              }
+            />
+            <Route
+              path="/como-funciona"
+              element={
+                <PrivateRoutes>
+                  <HowItWorks />
+                </PrivateRoutes>
+              }
+            />
+            <Route
+              path="/perfil"
+              element={
+                <PrivateRoutes>
+                  <UserProfile />
+                </PrivateRoutes>
+              }
+            />
+          </Routes>
+        </UserProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     </>
   );
 }

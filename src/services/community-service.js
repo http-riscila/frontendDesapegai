@@ -1,9 +1,21 @@
 import api from "./api";
 
 // COMUNIDADES - Service de getAll
-export async function getCommunities() {
+export async function getCommunities(params = {}) {
+
+  // para cada chave que receber nos parametros, checa se é null ou undefined,
+  // se for, deleta os parametros e retorna todas comunidades
+  for (const key in params) {
+    if (params[key] === undefined || params[key] === null) {
+      delete params[key];
+    }
+  }
+
+  const queryParams = new URLSearchParams(params).toString();
+  const url = queryParams ? `/api/communities?${queryParams}` : "/api/communities";
+
   try {
-    const response = await api.get("/api/communities");
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Error getting communities", error);
@@ -11,7 +23,7 @@ export async function getCommunities() {
   }
 }
 
-// COMUNIDADES - Service de create
+// COMUNIDADES — Service de create
 export async function createCommunity(communityData) {
   try {
     const response = await api.post("/api/communities", communityData);

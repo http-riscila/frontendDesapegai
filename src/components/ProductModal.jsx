@@ -1,5 +1,24 @@
+import { ITEM_CATEGORY_LABELS } from "../labels/EnumLabels.js";
+
 export default function ProductModal({ isOpen, onClose, ad }) {
+
   if (!isOpen || !ad) return null;
+
+  const formatDate = (date) => {
+    const now = new Date();
+    const adDate = new Date(date);
+    const diffInDays = Math.floor((now - adDate) / (1000 * 60 * 60 * 24));
+
+    if (diffInDays < 30 && diffInDays >= 1) {
+      return `Há ${diffInDays} dia${diffInDays > 1 ? 's' : ''}`;
+    } else if (diffInDays < 1) {
+      return "Hoje";
+    } else if (diffInDays < 365) {
+      const months = Math.floor(diffInDays / 30);
+      return `Há ${months} mês${months > 1 ? 'es' : ''}`;
+    }
+  }
+
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${
@@ -9,11 +28,11 @@ export default function ProductModal({ isOpen, onClose, ad }) {
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white"
+        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white "
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-6">
+        <div className="fixed inset bg-white w-xl flex items-center justify-between border-b border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900">
             Detalhes do anúncio
           </h2>
@@ -38,13 +57,13 @@ export default function ProductModal({ isOpen, onClose, ad }) {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 mt-16">
           {/* Main Image */}
           <div className="mb-4">
             <img
               src={ad.imageUrl}
               alt={ad.name}
-              className="h-48 w-full rounded-lg object-cover"
+              className="h-98 w-full aspect-square rounded-lg object-cover"
             />
           </div>
 
@@ -89,14 +108,16 @@ export default function ProductModal({ isOpen, onClose, ad }) {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Há 3 sem atrás
+              { // Formata a data para mostrar 'Há X dias' ou 'Há X meses'
+                formatDate(ad.createdAt)
+              }
             </span>
           </div>
 
           {/* Category Tag */}
           <div className="mb-4">
             <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-              {ad.category}
+              {ITEM_CATEGORY_LABELS[ad.category]}
             </span>
           </div>
 
@@ -124,15 +145,15 @@ export default function ProductModal({ isOpen, onClose, ad }) {
             <div className="flex items-center gap-3">
               <img
                 src={
-                  ad.createdBy.profileImageUrl ||
-                  "src/assets/icons/profile-pic.svg"
+                  ad.creator.profileImageUrl ||
+                  "../src/assets/icons/profile-pic.svg"
                 }
-                alt={ad.createdBy.name}
+                alt={ad.creator.name}
                 className="h-10 w-10 rounded-full object-cover"
               />
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {ad.createdBy.name}
+                  {ad.creator.name}
                 </p>
                 <div className="flex items-center gap-1">
                   <svg

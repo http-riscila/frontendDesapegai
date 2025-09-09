@@ -22,7 +22,7 @@ export const ITEM_CATEGORY_LABELS = {
   OTHER: "Outros",
 };
 
-export const ITEML_STATUS_LABELS = {
+export const ITEM_STATUS_LABELS = {
   AVAILABLE: "Disponível",
   NOT_AVAILABLE: "Indisponível",
 };

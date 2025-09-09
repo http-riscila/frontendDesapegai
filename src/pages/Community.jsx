@@ -1,90 +1,87 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
-import CommunityCard from "../components/CommunityCard";
 import CreateAdModal from "../components/ProductDetail";
 import Footer from "../components/Footer";
 import Breadcrumb from "../components/Breadcrumb";
 import memberIcon from "../assets/icons/member-icon.svg";
 import {
   getCommunityById,
-  searchCommunityAds,
 } from "../services/community-service";
-import { getItemsByCommunity, createItem } from "../services/item-service";
+import { createItem } from "../services/item-service";
+import { useAds } from "../queries/use-ads.js";
+import AdCard from "../components/AdCard.jsx";
+import { useQuery } from "@tanstack/react-query";
+import { useUser } from "../contexts/UserContext.jsx";
 
 const Community = () => {
   const { communityId } = useParams();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [community, setCommunity] = useState(null);
-  const [ads, setAds] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [adsLoading, setAdsLoading] = useState(true);
+  // const [community, setCommunity] = useState(null);
+  // const [ads, setAds] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // const [adsLoading, setAdsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  const user = useUser()
+
+  if (!user) {
+    navigate("/login");
+  }
 
   // Carregar dados da comunidade
-  const loadCommunityData = useCallback(async () => {
-    try {
-      setLoading(true);
-      console.log("Carregando dados da comunidade:", communityId);
-      const data = await getCommunityById(communityId);
-      setCommunity(data);
-    } catch (err) {
-      console.error("Erro ao carregar dados da comunidade:", err);
-      setCommunity(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [communityId]);
+  // const loadCommunityData = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+  //     console.log("Carregando dados da comunidade:", communityId);
+  //     const data = await getCommunityById(communityId);
+  //     setCommunity(data);
+  //   } catch (err) {
+  //     console.error("Erro ao carregar dados da comunidade:", err);
+  //     setCommunity(null);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [communityId]);
 
-  // Carregar anúncios da comunidade
-  const loadCommunityAds = useCallback(async () => {
-    try {
-      setAdsLoading(true);
-      const data = await getItemsByCommunity(communityId);
-      setAds(data);
-    } catch (err) {
-      console.error("Erro ao carregar anúncios da comunidade:", err);
-      setAds([]);
-    } finally {
-      setAdsLoading(false);
-    }
-  }, [communityId]);
+  const {data: communityData, isLoading: isLoadingCommunity} = useQuery(
+    {
+      queryKey: ['Community', communityId],
+    queryFn: () => getCommunityById(communityId)}
+
+  )
+  const { data: adsData, isLoading: isLoadingAds } = useAds(communityId);
+
+  const ads = adsData || [];
+  const { community } = communityData || {}
+
 
   // useEffect após definição dos métodos
-  useEffect(() => {
-    if (communityId) {
-      loadCommunityData();
-      loadCommunityAds();
-    } else {
-      setLoading(false);
-      setAdsLoading(false);
-    }
-  }, [communityId, loadCommunityData, loadCommunityAds]);
 
-  const handleSearchAds = useCallback(
-    async (term) => {
-      try {
-        setAdsLoading(true);
-        if (term.trim()) {
-          const data = await searchCommunityAds(communityId, term);
-          setAds(data);
-        } else {
-          await loadCommunityAds();
-        }
-      } catch (err) {
-        console.error("Erro ao buscar anúncios:", err);
-        setAds([]);
-      } finally {
-        setAdsLoading(false);
-      }
-    },
-    [communityId, loadCommunityAds]
-  );
+
+  // const handleSearchAds = useCallback(
+  //   async (term) => {
+  //     try {
+  //       setAdsLoading(true);
+  //       if (term.trim()) {
+  //         const data = await searchCommunityAds(communityId, term);
+  //         setAds(data);
+  //       } else {
+  //         await loadCommunityAds();
+  //       }
+  //     } catch (err) {
+  //       console.error("Erro ao buscar anúncios:", err);
+  //       setAds([]);
+  //     } finally {
+  //       setAdsLoading(false);
+  //     }
+  //   },
+  //   [communityId, loadCommunityAds]
+  // );
 
   const handleCreateAd = async (adData) => {
     try {
       const newAd = await createItem(communityId, adData);
-      setAds((prev) => [newAd, ...prev]);
       setShowAddModal(false);
       console.log("Anúncio criado com sucesso:", newAd);
     } catch (err) {
@@ -93,14 +90,17 @@ const Community = () => {
     }
   };
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (communityId) {
-        handleSearchAds(searchTerm);
-      }
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, communityId, handleSearchAds]);
+  // useEffect(() => {
+  //   const timeoutId = setTimeout(() => {
+  //     if (communityId) {
+  //       handleSearchAds(searchTerm);
+  //     }
+  //   }, 500);
+  //   return () => clearTimeout(timeoutId);
+  // }, [searchTerm, communityId, handleSearchAds]);
+
+  console.log('Community Data:', community);
+  console.log('Ads Data:', ads);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -109,7 +109,7 @@ const Community = () => {
         <div className="flex flex-col gap-4">
           <Breadcrumb community={community} />
           {/* Community Info */}
-          {loading ? (
+          {isLoadingCommunity ? (
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
               <span className="ml-3 text-gray-600">
@@ -120,13 +120,12 @@ const Community = () => {
             <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-6">
                 <img
-                  src={community.imageUrl || "/placeholder-community.png"}
+                  src={community.imageUrl || "https://placehold.net/400x400.png"}
                   alt={community.name}
                   className="h-20 w-20 rounded-full border-2 border-blue-200 object-cover"
                   onError={ (e) => {
-                    e.target.src = community.imageUrl ||
-                      "../../public/images/bazar.jpg";
-                  } }
+                    e.target.src =
+                      "https://placehold.net/400x400.png"; } }
                 />
                 <div>
                   <h1 className="mb-1 text-2xl font-bold text-gray-900">
@@ -134,14 +133,9 @@ const Community = () => {
                   </h1>
                   <p className="mb-2 text-gray-600">{community.description}</p>
                   <div className="flex items-center gap-3">
-                    {community.category && (
-                      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                        {community.category}
-                      </span>
-                    )}
                     <span className="flex items-center justify-start gap-2 text-xs text-gray-500">
                       <img src={memberIcon} alt="Membros" />
-                      {community.membersCount} membros
+                      {community.memberCount} membros
                     </span>
                   </div>
                 </div>
@@ -156,7 +150,7 @@ const Community = () => {
           ) : null}
 
           {/* Search Bar */}
-          {!loading && (
+          {isLoadingCommunity && (
             <div className="mb-6">
               <input
                 type="text"
@@ -164,13 +158,13 @@ const Community = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-12 w-full rounded-lg border border-gray-300 px-4 py-2 transition-colors focus:border-blue-500 focus:outline-none"
-                disabled={adsLoading}
+                disabled={isLoadingAds}
               />
             </div>
           )}
 
           {/* Ads Loading */}
-          {adsLoading && (
+          {isLoadingAds && (
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
               <span className="ml-3 text-gray-600">Carregando anúncios...</span>
@@ -178,20 +172,16 @@ const Community = () => {
           )}
 
           {/* Ads Grid */}
-          {!adsLoading && (
+          {!isLoadingAds && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {ads.map((ad) => (
-                <CommunityCard
+                <AdCard
                   key={ad.id}
-                  image={ad.imageUrl}
-                  title={ad.title}
-                  status={ad.status}
-                  description={ad.description}
-                  user={ad.user}
+                  ad={ad}
                 />
               ))}
 
-              {ads.length === 0 && !adsLoading && (
+              {ads.length === 0 && !isLoadingAds && (
                 <div className="col-span-full py-12 text-center">
                   <p className="text-lg text-gray-500">
                     {searchTerm
