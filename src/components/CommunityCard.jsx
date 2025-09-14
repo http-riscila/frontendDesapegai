@@ -9,11 +9,10 @@ import { useUser } from "../contexts/UserContext.jsx";
 import ConfirmModal from "./ConfirmModal.jsx";
 import { useNavigate } from "react-router-dom";
 
-
 export default function CommunityCard({ community }) {
   // const [membersCount, setMembersCount] = useState(0);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { user } = useUser();
 
   const userId = user?.id;
@@ -21,7 +20,7 @@ export default function CommunityCard({ community }) {
 
   // Retorna o número de membros da comunidade sem precisar de um useEffect
   // A propriedade _count.members já está existe no objeto community
-  const membersCount = community?._count.members
+  const membersCount = community?._count.members;
 
   // useEffect(() => {
   //   async function fetchMembersCount() {
@@ -80,7 +79,7 @@ export default function CommunityCard({ community }) {
       {/* Conteúdo do card */}
       <div className="flex flex-1 flex-col gap-4 rounded-b-xl border border-t-0 border-x-[var(--color-primary)] border-b-[var(--color-primary)] p-6">
         <div className="flex flex-row items-center justify-end gap-2 text-xs text-[var(--color-text)]">
-          <img src={memberIcon} alt={'member icon'}/>
+          <img src={memberIcon} alt={"member icon"} />
           <span className="flex flex-row gap-1">
             {membersCount ?? 0} {membersCount === 1 ? "membro" : "membros"}
           </span>

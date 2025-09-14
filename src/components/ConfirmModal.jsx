@@ -1,3 +1,5 @@
+import { Button } from "flowbite-react";
+
 const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
   if (!isOpen) {
     return null;
@@ -5,39 +7,39 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 left-0 z-50 flex h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden md:inset-0 ${isOpen ? 'block' : 'hidden'}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto bg-black/50 p-4 md:inset-0 ${isOpen ? "block" : "hidden"}`}
       id="popup-modal"
       tabIndex="-1"
     >
       <div className="relative max-h-full w-full max-w-md p-4">
-        <div className="relative m-2 rounded-lg border-2 bg-zinc-500 shadow-sm dark:border-gray-600">
-          <button
-            className="absolute end-2.5 top-3 ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-gray-400 text-sm hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+        <div className="relative m-2 rounded-lg bg-white">
+          <Button
             data-modal-hide="popup-modal"
             onClick={onClose}
             type="button"
+            className="absolute top-1 right-1 cursor-pointer rounded-xl border !bg-white px-1 py-1 hover:!bg-gray-100"
           >
             <svg
-              aria-hidden="true"
-              className="h-3 w-3"
-              fill="none"
-              viewBox="0 0 14 14"
+              width="42"
+              height="42"
+              viewBox="0 0 46 46"
+              fill="currentColor"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
+                d="M28.6569 17.3431L17.3431 28.6569M28.6569 28.6569L17.3431 17.3431"
+                stroke="#111827"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               />
             </svg>
             <span className="sr-only">Close modal</span>
-          </button>
-          <div className="flex flex-col items-center p-4 text-center md:p-5">
+          </Button>
+          <div className="flex flex-col items-center p-2 text-center md:p-5">
             <svg
               aria-hidden="true"
-              className="mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200"
+              className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-200"
               fill="none"
               viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg"
@@ -50,10 +52,12 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
                 strokeWidth="2"
               />
             </svg>
-            <span className="mb-5 font-normal text-white">{message}</span>
+            <span className="mb-5 font-normal text-[var(--color-title)]">
+              {message}
+            </span>
             <div>
               <button
-                className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-center font-medium text-sm text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
+                className="inline-flex cursor-pointer items-center rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-center text-sm font-medium text-white transition-colors duration-700 hover:bg-[var(--color-tertiary)]"
                 data-modal-hide="popup-modal"
                 onClick={onConfirm}
                 type="button"
@@ -61,7 +65,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
                 Sim, entrar na comunidade
               </button>
               <button
-                className="ms-3 rounded-lg bg-gray-800 px-5 py-2.5 font-bold text-sm text-white hover:bg-gray-600 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100"
+                className="ms-3 cursor-pointer rounded-lg border border-[var(--color-secondary)] bg-white px-5 py-2.5 text-sm font-medium text-[var(--color-secondary)] transition-colors duration-700 hover:bg-[var(--color-secondary)] hover:text-white"
                 data-modal-hide="popup-modal"
                 onClick={onClose}
                 type="button"
