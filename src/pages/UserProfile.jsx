@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "../contexts/UserContext";
-import { countAcceptedProposals } from "../services/proposal-service";
-import { countAvailableItems } from "../services/item-service";
+import { useProfileCounts } from "../queries/use-profile-count";
 import { countCreatedCommunities } from "../services/community-service";
 import { getCommunitiesByUser } from "../services/community-service";
 import { getItemsByUser } from "../services/item-service";
@@ -21,10 +20,10 @@ import photoBg from "../assets/images/profile-img-bg.png";
 import profilePic from "../assets/icons/profile-pic.svg";
 import editIcon from "../assets/icons/edit-icon.png";
 
-export default function UserDetails() {
-  const [tradeCount, setTradeCount] = useState(0);
-  const [activeAdCount, setActiveAdCount] = useState(0);
-  const [communityCount, setCommunityCount] = useState(0);
+export default function UserProfile() {
+  const { user } = useUser();
+  const { availableItems, createdCommunities, acceptedProposals } =
+    useProfileCounts(user?.id);
 
   const [communities, setCommunities] = useState([]);
   const [ads, setAds] = useState([]);
@@ -36,12 +35,10 @@ export default function UserDetails() {
   const [selectedAd, setSelectedAd] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const { user } = useUser();
-
-  useEffect(() => {
+  /*useEffect(() => {
     if (!user?.id) return;
 
-    async function fetchCounts() {
+   async function fetchCounts() {
       try {
         const [trades, items, communities] = await Promise.all([
           countAcceptedProposals(user.id),
@@ -109,7 +106,7 @@ export default function UserDetails() {
     } catch (error) {
       console.log("Error fetching communities", error);
     }
-  }
+  }*/
 
   const handleOpenModal = (ad) => {
     setSelectedAd(ad);
@@ -170,19 +167,19 @@ export default function UserDetails() {
               <ul className="font-bricolage flex flex-row justify-between text-lg font-medium text-[var(--color-title)]">
                 <li className="flex flex-row items-center gap-2">
                   <span className="text-xl text-[var(--color-primary)]">
-                    {tradeCount ?? 0}
+                    {acceptedProposals}
                   </span>{" "}
                   Trocas realizadas
                 </li>
                 <li className="flex flex-row items-center gap-2">
                   <span className="text-xl text-[var(--color-primary)]">
-                    {activeAdCount ?? 0}
+                    {availableItems}
                   </span>{" "}
                   Anúncios ativos
                 </li>
                 <li className="flex flex-row items-center gap-2">
                   <span className="text-xl text-[var(--color-primary)]">
-                    {communityCount ?? 0}
+                    {createdCommunities}
                   </span>{" "}
                   Comunidades criadas
                 </li>
