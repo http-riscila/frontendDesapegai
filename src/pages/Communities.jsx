@@ -6,15 +6,16 @@ import Breadcrumb from "../components/Breadcrumb";
 import CommunityCard from "../components/CommunityCard";
 import { useCommunities } from "../queries/use-communities.js";
 import { useDebounce } from "../hooks/use-debounce.js";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import CreateCommunityModal from "../components/CreateCommunityModal.jsx";
-
 
 const Communities = () => {
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
   const debouncedSearch = useDebounce(searchTerm, 500);
   const searchRef = useRef(null);
 
@@ -27,7 +28,7 @@ const Communities = () => {
   };
 
   // Usa o hook que faz o fetch usando react-query e retorna data(Comunidades) e isLoading
-  const { data, isLoading} = useCommunities(filters);
+  const { data, isLoading } = useCommunities(filters);
 
   // Seta as comunidades pegando as comunidades em data, ou retornando um array vazio
   const communities = data?.communities || [];
@@ -58,7 +59,6 @@ const Communities = () => {
       searchRef.current.focus();
     }
   }, [searchRef]);
-
 
   /**
    * Função para lidar com as mudanças nos filtros como ordenação e paginação.
@@ -96,11 +96,14 @@ const Communities = () => {
     { label: "Mais Recentes", value: "createdAt", orderDirection: "desc" },
     { label: "Mais Antigas", value: "createdAt", orderDirection: "asc" },
     { label: "Nome A-Z", value: "name", orderDirection: "asc" },
-    { label: "Nome Z-A", value: "name" , orderDirection: "desc" },
-    { label: "Membros Decrescente", value: "memberCount", orderDirection: "desc" },
+    { label: "Nome Z-A", value: "name", orderDirection: "desc" },
+    {
+      label: "Membros Decrescente",
+      value: "memberCount",
+      orderDirection: "desc",
+    },
     { label: "Membros Crescente", value: "memberCount", orderDirection: "asc" },
   ];
-
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
@@ -140,20 +143,29 @@ const Communities = () => {
           />
         </div>
 
-        <section className={"mb-6 flex flex-col items-start gap-4"}>
-          <div className={"flex flex-col items-start gap-2"}>
-            <label htmlFor={"Ordenar Por"}>Ordenar Por</label>
+        <section className={"mb-6 flex justify-end"}>
+          <div className={"flex flex-row items-center gap-2"}>
+            <label htmlFor={"Ordenar Por"} className="text-gray-500">
+              Ordenar Por
+            </label>
             <select
               onChange={(e) => {
-                handleFilterChange("orderBy", e.target.value, e.target.selectedOptions[0].dataset.direction);
+                handleFilterChange(
+                  "orderBy",
+                  e.target.value,
+                  e.target.selectedOptions[0].dataset.direction
+                );
               }}
-              className={' rounded-lg border-2 border-gray-300 p-2'}
+              className={
+                "cursor-pointer rounded-2xl border-2 border-gray-300 p-2 text-[var(--color-primary)] transition-all outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+              }
             >
               {orderByOptions.map((option) => (
                 <option
                   key={option.label}
                   value={option.value}
                   data-direction={option.orderDirection}
+                  className="text-gray-700"
                 >
                   {option.label}
                 </option>
@@ -176,10 +188,7 @@ const Communities = () => {
         {!isLoading && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {communities.map((community) => (
-              <CommunityCard
-                key={community.id}
-                community={community}
-              />
+              <CommunityCard key={community.id} community={community} />
             ))}
 
             {communities.length === 0 && !isLoading && (
@@ -198,7 +207,7 @@ const Communities = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCommunityCreated={() => {
-          toast.success("Comunidade criada com sucesso!")
+          toast.success("Comunidade criada com sucesso!");
         }}
       />
       <Footer />
